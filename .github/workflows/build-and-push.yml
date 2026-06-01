@@ -1,0 +1,105 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+env:
+  DOCKER_IMAGE: flowtriq/ftagent
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (test)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ${{ env.DOCKER_IMAGE }}:test
+
+      - name: Test - image starts and shows help with no config
+        run: |
+          OUTPUT=$(docker run --rm ${{ env.DOCKER_IMAGE }}:test 2>&1 || true)
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -q "FTAGENT_API_KEY"; then
+            echo "PASS: Entrypoint correctly requires API key"
+          else
+            echo "FAIL: Entrypoint did not show expected error"
+            exit 1
+          fi
+
+      - name: Test - config generated from env vars
+        run: |
+          docker run --rm \
+            -e FTAGENT_API_KEY=test_key_123 \
+            -e FTAGENT_NODE_UUID=test_uuid_456 \
+            -e FTAGENT_INTERFACE=lo \
+            ${{ env.DOCKER_IMAGE }}:test sh -c "cat /etc/ftagent/config.json" | tee /tmp/config_output.json
+
+          if grep -q "test_key_123" /tmp/config_output.json && grep -q "test_uuid_456" /tmp/config_output.json; then
+            echo "PASS: Config generated correctly from env vars"
+          else
+            echo "FAIL: Config not generated correctly"
+            exit 1
+          fi
+
+      - name: Test - ftagent binary is installed
+        run: |
+          docker run --rm ${{ env.DOCKER_IMAGE }}:test sh -c "which ftagent && ftagent --version"
+
+  push:
+    needs: build-and-test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Update Docker Hub description
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: flowtriq/ftagent
+          readme-filepath: ./README.md
