@@ -14,7 +14,7 @@ EOF
     echo "Config generated from environment variables."
 fi
 
-if [ ! -f "$FTAGENT_CONFIG" ] && [ -z "$FTAGENT_API_KEY" ]; then
+if [ ! -f "$FTAGENT_CONFIG" ] && [ -z "$FTAGENT_API_KEY" ] && [ "$1" = "ftagent" ]; then
     echo "ERROR: No config found. Mount a config file to $FTAGENT_CONFIG or set FTAGENT_API_KEY environment variable."
     echo ""
     echo "Usage:"

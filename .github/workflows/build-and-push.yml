@@ -54,7 +54,11 @@ jobs:
 
       - name: Test - ftagent binary is installed
         run: |
-          docker run --rm ${{ env.DOCKER_IMAGE }}:test sh -c "which ftagent && ftagent --version"
+          docker run --rm ${{ env.DOCKER_IMAGE }}:test which ftagent
+          docker run --rm \
+            -e FTAGENT_API_KEY=test \
+            -e FTAGENT_NODE_UUID=test \
+            ${{ env.DOCKER_IMAGE }}:test ftagent --version
 
   push:
     needs: build-and-test
