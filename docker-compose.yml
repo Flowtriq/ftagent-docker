@@ -1,0 +1,20 @@
+services:
+  ftagent:
+    image: flowtriq/ftagent:latest
+    container_name: ftagent
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    environment:
+      - FTAGENT_API_KEY=${FTAGENT_API_KEY}
+      - FTAGENT_NODE_UUID=${FTAGENT_NODE_UUID}
+      - FTAGENT_INTERFACE=${FTAGENT_INTERFACE:-eth0}
+    volumes:
+      - ftagent-data:/var/lib/ftagent
+      - ftagent-logs:/var/log/ftagent
+
+volumes:
+  ftagent-data:
+  ftagent-logs:
