@@ -6,6 +6,8 @@ on:
     tags: ["v*"]
   pull_request:
     branches: [main]
+  repository_dispatch:
+    types: [ftagent-release]
 
 env:
   DOCKER_IMAGE: flowtriq/ftagent
@@ -62,7 +64,7 @@ jobs:
 
   push:
     needs: build-and-test
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    if: github.event_name == 'repository_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
