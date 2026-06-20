@@ -1,6 +1,10 @@
-# ftagent
+# ftagent-docker
 
-**Flowtriq DDoS Detection Agent** - Real-time traffic monitoring, attack detection, PCAP capture, and auto-mitigation for Linux servers.
+[![Docker Hub](https://img.shields.io/docker/v/flowtriq/ftagent?label=Docker%20Hub&sort=semver)](https://hub.docker.com/r/flowtriq/ftagent)
+[![Docker Pulls](https://img.shields.io/docker/pulls/flowtriq/ftagent)](https://hub.docker.com/r/flowtriq/ftagent)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+Docker packaging for **[ftagent](https://github.com/Flowtriq/ftagent)**, the Flowtriq DDoS detection agent. Provides real-time traffic monitoring, attack detection, PCAP capture, and auto-mitigation for Linux servers running in containerized environments.
 
 A valid [Flowtriq](https://flowtriq.com) account and API key are required. Start a free 14-day trial at [flowtriq.com](https://flowtriq.com).
 
@@ -44,18 +48,20 @@ volumes:
   ftagent-logs:
 ```
 
+A ready-to-use `docker-compose.yml` is included in this repository. Copy `.env.example` or set the environment variables directly.
+
 ## Environment Variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `FTAGENT_API_KEY` | Yes | - | Your Flowtriq API key |
-| `FTAGENT_NODE_UUID` | Yes | - | Node UUID from your Flowtriq dashboard |
+| `FTAGENT_API_KEY` | Yes | -- | Your Flowtriq API key |
+| `FTAGENT_NODE_UUID` | Yes | -- | Node UUID from your Flowtriq dashboard |
 | `FTAGENT_INTERFACE` | No | `eth0` | Network interface to monitor |
 | `FTAGENT_API_URL` | No | `https://api.flowtriq.com` | API endpoint |
 
 ## Config File Mount
 
-Alternatively, mount your own config file:
+Alternatively, mount your own config file instead of using environment variables:
 
 ```bash
 docker run -d \
@@ -79,14 +85,26 @@ docker run -d \
 2. Go to **Dashboard** > **Nodes** > **Add Node**
 3. Copy the API key and Node UUID
 
-## Tags
+## Image Tags
 
-- `latest` - Latest stable release
-- `x.y.z` - Specific version (e.g., `1.9.10`)
+- `latest` -- latest stable release
+- `x.y.z` -- specific version (e.g., `1.9.10`)
+
+## Building Locally
+
+```bash
+git clone https://github.com/Flowtriq/ftagent-docker.git
+cd ftagent-docker
+docker build -t ftagent .
+```
 
 ## Links
 
+- [Flowtriq Website](https://flowtriq.com)
+- [ftagent on GitHub](https://github.com/Flowtriq/ftagent)
 - [Documentation](https://flowtriq.com/docs)
-- [GitHub](https://github.com/Flowtriq/ftagent)
 - [Support](mailto:hello@flowtriq.com)
-- [Website](https://flowtriq.com)
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
